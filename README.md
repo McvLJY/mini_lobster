@@ -35,7 +35,7 @@ Agent会：
 4. 🎉 返回最终结果
 5. 请参考examples/AustralianOpen2026/agent.log
 
-<img src="examples/AustralianOpen2026/2026年澳网男单决赛总结.png" width="200" alt="澳网总结文档">
+<img src="examples/AustralianOpen2026/2026年澳网男单决赛总结.png" width="400" alt="澳网总结文档">
 
 ### 案例2：数据处理+可视化
 > “处理杂乱的销售数据文件，按商品类别画按月销售量折线图”
@@ -68,7 +68,7 @@ Agent会：
 6. ✅ 验证任务完成，返回详细描述
 7. 请参考 `examples/ImageAnalysis/agent.log`
 
-<img src="examples/ImageAnalysis/fjj.jpeg" width="200" alt="案例3">
+<img src="examples/ImageAnalysis/fjj.jpeg" width="400" alt="案例3">
 
 **执行过程简览**：
 
@@ -85,9 +85,49 @@ Agent会：
 
 ## 🚀 快速开始
 
+> # ⚠️ **🚨 超级重要警告 🚨 !!! 强烈建议在 Docker 中运行 !!!** 
+> 
+> ## **mini_lobster 的 Python 代码执行器具有执行任意系统命令的潜力！**
+>
+> ### 🔥 **风险提示：**
+> - Agent 可以动态生成并执行 Python 代码
+> - 代码可以访问文件系统、执行 shell 命令、修改环境
+> - **如果在宿主机直接运行，存在潜在安全风险**
+>
+> ### 📦 **Docker 隔离带来的好处：**
+> - 🛡️ **文件系统隔离** - 限制在容器内
+> - 🔒 **网络隔离** - 可精细控制
+> - 📊 **资源限制** - 防止失控
+> - 🧹 **一键清理** - 用完即焚
+>
+> ### ⚡ **切勿在以下环境直接运行：**
+> - ❌ 生产服务器
+> - ❌ 个人电脑（无隔离）
+> - ❌ 共享系统
+> - ❌ 包含敏感数据的机器
+>
+> ### 🔐 安全建议：
+> 
+> Docker 运行是**最低要求**，但不是**绝对安全**。建议：
+> 
+> ### 最低安全配置
+> ```bash
+> docker run --rm \
+>   --read-only \
+>   --cap-drop=ALL \
+>   --security-opt=no-new-privileges \
+>   --cpus=1 --memory=1g \
+>   -v ./workspace:/app/workspace:ro \
+>   mini_lobster
+>
+> ---
+> 
+> **安全第一！Docker 是你的安全带！** 🦞
+
 ### 环境要求
 - Python 3.10+
 - pip 包管理工具
+- 建议在Docker中启动！将需要涉及的文件夹做一次映射
 
 ### 安装步骤
 

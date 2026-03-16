@@ -34,7 +34,8 @@ Agent会：
 3. ✅ 验证文件是否成功创建
 4. 🎉 返回最终结果
 5. 请参考examples/AustralianOpen2026/agent.log
-![案例1](examples/AustralianOpen2026/2026年澳网男单决赛总结.png)
+
+<img src="examples/AustralianOpen2026/2026年澳网男单决赛总结.png" width="500" alt="澳网总结文档">
 
 ### 案例2：数据处理+可视化
 > “处理杂乱的销售数据文件，按商品类别画按月销售量折线图”
@@ -66,7 +67,8 @@ Agent会：
 5. 📝 成功分析图片内容（识别出航空母舰、舰型特征、环境细节等）
 6. ✅ 验证任务完成，返回详细描述
 7. 请参考 `examples/ImageAnalysis/agent.log`
-![案例3](examples/ImageAnalysis/fjj.jpeg)
+
+<img src="examples/ImageAnalysis/fjj.jpeg" width="500" alt="案例3">
 
 **执行过程简览**：
 

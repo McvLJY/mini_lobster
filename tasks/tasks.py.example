@@ -1,0 +1,14 @@
+
+from datetime import datetime
+from utilities.PARAMS import base_wkd
+import os
+
+
+
+task_dir = 'example_task_01'
+wd = os.path.join(base_wkd, task_dir)
+example_task_01 = {
+    'task_name': f"""你的工作目录是{wd}。请帮我查询一下2026年澳网男单决赛的情况，把概况总结一下，写成文档，保存在一个txt文件中。注意需要每一盘的详细比分。""",
+    'task_dir': task_dir
+}
+

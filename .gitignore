@@ -21,7 +21,6 @@ tasks/tasks.py
 workspace/
 
 # 日志文件
-*.log
 
 # 虚拟环境
 venv/

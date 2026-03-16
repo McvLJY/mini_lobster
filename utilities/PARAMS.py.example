@@ -1,20 +1,24 @@
 
 
 # BASE WORKDIR
-base_wkd = '/Mywork/LLM/llm_tool_call_test/workspace'
+base_wkd = './workspace'
 
 # REQUIRED
+# 主模型api_key，建议用线上模型
 DEEPSEEK_API_KEY = "YOUR_API_KEY"
 
 # OPTIONAL
+# 对应百度搜索Tools功能，可自行申请，每日1000次免费使用
 BAIDU_SEARCH_API_KEY = "YOUR_API_KEY"
 
 # OPTIONAL
+# 如果有本地通过vllm服务启动的主模型，可以填写在这里
 MAIN_AGENT_BASE_URL = "http://localhost:8000/v1"
 MAIN_AGENT_LOCAL_MODEL_ADDRESS = "YOUR_VLLM_MODEL_DIR"
 MAIN_AGENT_LOCAL_MODEL_MAX_TOKENS = 4096
 
 # OPTIONAL
+# 如果有本地通过vllm服务启动的视觉模型，可以填写在这里，用于视觉分析Tools
 IMAGE_AGENT_BASE_URL = "http://localhost:8000/v1"
 IMAGE_AGENT_LOCAL_MODEL_ADDRESS = "YOUR_VLLM_MODEL_DIR"
 IMAGE_AGENT_LOCAL_MODEL_MAX_TOKENS = 4096

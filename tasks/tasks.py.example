@@ -4,7 +4,7 @@ from utilities.PARAMS import base_wkd
 import os
 
 
-
+# 可同时修改两处example_task_01名称，确保task名称和它对应的文件夹能对应上
 task_dir = 'example_task_01'
 wd = os.path.join(base_wkd, task_dir)
 example_task_01 = {

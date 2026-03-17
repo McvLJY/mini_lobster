@@ -2,13 +2,10 @@ import json
 from openai import OpenAI
 import logging
 from enum import Enum
+from typing import Optional, Dict, Any
 
-from tools.core_tools import tools, execute_python_code
 from tasks.tasks import *
 from utilities.logger_setup import AgentLogger
-from tools.baidu_search_tool_multi import execute_baidu_search
-from tools.image_analyzer_vllm import execute_image_analysis
-from tools.core_tools_utils import *
 from utilities.conversation_logger import ConversationLogger
 from utilities.prompts import *
 from utilities.misc import *
@@ -16,6 +13,12 @@ from utilities.PARAMS import base_wkd
 from models.model_client import ModelClient
 from models.model_config import ModelProvider
 
+from tools.core_tools import tools
+from core.tool_registry import tool_registry
+# from tools.core_tools import tools, execute_python_code
+# from tools.baidu_search_tool_multi import execute_baidu_search
+# from tools.image_analyzer_vllm import execute_image_analysis
+# from tools.core_tools_utils import *
 
 # 测试任务
 tasks = task_ds_09
@@ -168,61 +171,31 @@ class IntelligentAgent:
         self.task_status = TaskStatus.FAILED
         return "Task did not complete within maximum iterations"
 
+
     def handle_tool_call(self, tool_call):
-        """处理单个工具调用"""
+        """处理单个工具调用 - 新版，无需if-else"""
         func_name = tool_call.function.name
         args = json.loads(tool_call.function.arguments)
 
-        # 使用logger
-        self.log.tool_call(func_name, args)  # 记录工具调用
+        # 使用logger记录工具调用
+        self.log.tool_call(func_name, args)
 
-        # 根据函数名分发
-        if func_name == "execute_python_code":
-            result = execute_python_code(args["code"], args.get("purpose", ""))
-            response_content = json.dumps(result, ensure_ascii=False)
-            self.log.tool_response(result)  # 记录工具响应
+        try:
+            result = tool_registry.execute(func_name, **args)
 
-        elif func_name == "baidu_search":
-            result = execute_baidu_search(
-                queries=args["queries"],
-                resource_types=args.get("resource_types", "web"),
-                top_k=args.get("top_k", 5),
-                search_recency=args.get("search_recency", "year"),
-                purpose=args.get("purpose", "")
-            )
-
-            # 这行会正确记录日志
-            self.log.tool_response(result)
-
-            # 返回给AI的是完整的result，包含formatted_output
-            response_content = json.dumps(result, ensure_ascii=False)
-
-        elif func_name == "analyze_image":
-            result = execute_image_analysis(
-                image_path=args["image_path"],
-                question=args.get("question", "请详细描述这张图片"),
-                purpose=args.get("purpose", "")
-            )
+            # 统一处理响应
             response_content = json.dumps(result, ensure_ascii=False)
             self.log.tool_response(result)
 
-        elif func_name == "verify_task_completion":
-            result = verify_task_completion(
-                args["result_summary"],
-                args["meets_requirements"],
-                args.get("missing_elements", [])
-            )
-            response_content = json.dumps(result, ensure_ascii=False)
-
-        elif func_name == "finalize_session":
-            result = finalize_session(
-                args["final_result"],
-                args["completion_message"]
-            )
-            response_content = json.dumps(result, ensure_ascii=False)
-
-        else:
-            response_content = json.dumps({"error": f"Unknown tool: {func_name}"})
+        except Exception as e:
+            # 统一错误处理
+            error_result = {
+                "success": False,
+                "error": str(e),
+                "output": f"Tool execution failed: {str(e)}"
+            }
+            response_content = json.dumps(error_result, ensure_ascii=False)
+            self.log.error(f"Tool {func_name} failed: {e}")
 
         return {
             "role": "tool",

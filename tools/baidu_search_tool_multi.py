@@ -4,6 +4,7 @@ import requests
 import json
 from typing import List, Dict, Any, Optional, Literal
 from utilities.PARAMS import BAIDU_SEARCH_API_KEY
+from core.tool_registry import tool
 
 # 定义支持的资源类型
 ResourceType = Literal["web", "image", "video", "news"]
@@ -47,64 +48,6 @@ def normalize_resource_types(resource_types):
         return DEFAULT_RESOURCE_TYPES.copy()
 
     return valid_types
-
-
-# 百度搜索工具定义
-baidu_search_tool = {
-    "type": "function",
-    "function": {
-        "name": "baidu_search",
-        "description": """
-使用百度搜索引擎搜索最新信息。支持网页、图片、视频等多种类型的结果。
-适合查询：
-- 实时新闻和事件
-- 最新数据（股票、汇率、天气等）
-- 需要联网验证的事实
-- 当前热点话题
-- 专业知识查询
-- Python包或功能的用法查询
-- 图片搜索（人物、地点、物品等视觉信息）
-
-注意：返回结果包含标题和内容摘要，可以获取top_k条结果（默认5条）。
-""",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "queries": {
-                    "type": "string",
-                    "description": "搜索查询词，可以是一个或多个关键词，用空格分隔"
-                },
-                "resource_types": {
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                        "enum": ["web", "image", "video", "news"]
-                    },
-                    "description": "需要返回的资源类型，默认只返回网页。如果要搜图，传入['image']",
-                    "default": ["web"]
-                },
-                "top_k": {
-                    "type": "integer",
-                    "description": "每种资源类型返回的结果数量，默认5条，最多10条",
-                    "minimum": 1,
-                    "maximum": 10,
-                    "default": 5
-                },
-                "search_recency": {
-                    "type": "string",
-                    "description": "搜索时效性，可选：'day'（一天内）、'week'（一周内）、'month'（一月内）、'year'（一年内）",
-                    "enum": ["day", "week", "month", "year"],
-                    "default": "year"
-                },
-                "purpose": {
-                    "type": "string",
-                    "description": "搜索目的说明，帮助理解为什么需要搜索这个信息"
-                }
-            },
-            "required": ["queries", "purpose"]
-        }
-    }
-}
 
 
 class BaiduSearchAPI:
@@ -294,6 +237,18 @@ class BaiduSearchAPI:
 
 
 # 工具执行函数（供智能体调用）
+@tool(
+    name="execute_baidu_search",
+    param_descriptions={  # 参数描述
+        "queries": "搜索查询词，可以是一个或多个关键词，用空格分隔",
+        "resource_types": "需要返回的资源类型，默认只返回网页。如果要搜图，传入['image']。支持的类型: web, image, video, news。传参数时，必须用列表形态传入",
+        "top_k": "每种资源类型返回的结果数量，默认5条，最多10条",
+        "search_recency": "搜索时效性，可选：'day'（一天内）、'week'（一周内）、'month'（一月内）、'year'（一年内）",
+        "purpose": "搜索目的说明，帮助理解为什么需要搜索这个信息"
+    },
+    category="search",
+    version="2.0.0"
+)
 def execute_baidu_search(
         queries: str,
         resource_types=None,
@@ -302,7 +257,17 @@ def execute_baidu_search(
         purpose: str = ""
 ):
     """
-    执行百度搜索的工具函数（支持网页和图片）
+    使用百度搜索引擎搜索最新信息。支持网页、图片、视频等多种类型的结果。
+    适合查询：
+    - 实时新闻和事件
+    - 最新数据（股票、汇率、天气等）
+    - 需要联网验证的事实
+    - 当前热点话题
+    - 专业知识查询
+    - Python包或功能的用法查询
+    - 图片搜索（人物、地点、物品等视觉信息）
+
+    注意：返回结果包含标题和内容摘要，可以获取top_k条结果（默认5条）。
 
     参数说明：
         resource_types: 可以是列表 ["web", "image"]，也可以是字符串 "web"
@@ -386,3 +351,27 @@ def execute_web_search(queries: str, top_k: int = 5, search_recency: str = "year
         search_recency=search_recency,
         purpose=purpose
     )
+
+
+if __name__ == "__main__":
+    from core.tool_registry import tool_registry
+    import json
+
+    print("=" * 60)
+    print("验证百度搜索工具注册")
+    print("=" * 60)
+
+    # 查看 baidu_search 的 schema
+    print("\n🔧 baidu_search schema：")
+    schema = tool_registry._tool_schemas.get("baidu_search")
+    if schema:
+        print(json.dumps(schema, ensure_ascii=False, indent=2))
+    else:
+        print("❌ 没找到 baidu_search")
+
+    # 查看所有搜索类工具
+    print("\n📋 搜索类工具：")
+    for name in tool_registry.list_tools():
+        metadata = tool_registry._tool_metadata.get(name, {})
+        if metadata.get("category") == "search":
+            print(f"  - {name}")

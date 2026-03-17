@@ -8,6 +8,40 @@ import importlib.util
 from pathlib import Path
 
 
+def auto_discover(self):
+    """自动发现tools目录下所有工具模块"""
+    import pkgutil
+    import importlib
+    import tools
+
+    print("🔍 开始自动发现工具...")
+
+    # 获取 tools 包的路径
+    tools_path = tools.__path__
+
+    # 遍历所有模块
+    for finder, name, ispkg in pkgutil.iter_modules(tools_path):
+        if name.startswith('_'):
+            continue
+
+        try:
+            # 使用 importlib 导入模块
+            module = importlib.import_module(f'tools.{name}')
+            print(f"✅ Auto-discovered: tools.{name}")
+
+            # 查看模块里有哪些带 @tool 的函数
+            tool_funcs = [attr for attr in dir(module)
+                          if hasattr(getattr(module, attr), '_is_tool')]
+            if tool_funcs:
+                print(f"   └─ 发现工具: {', '.join(tool_funcs)}")
+
+        except Exception as e:
+            print(f"❌ Failed to load tools.{name}: {e}")
+
+    # 列出所有已注册工具
+    print(f"\n📋 当前已注册工具: {self.list_tools()}")
+
+
 class ToolRegistry:
     """工具注册器 - 单例模式"""
     _instance = None
@@ -20,15 +54,23 @@ class ToolRegistry:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def register(self, name: str = None, schema: Dict = None, **metadata):
-        """装饰器：注册工具"""
+    def register(self, name: str = None, schema: Dict = None, param_descriptions: Dict = None, **metadata):
+        """装饰器：注册工具
+
+        Args:
+            name: 工具名称，默认使用函数名
+            schema: 手动指定的完整schema（优先级最高）
+            param_descriptions: 参数描述字典，如 {"code": "要执行的代码..."}
+            **metadata: 其他元数据
+        """
 
         def decorator(func):
             tool_name = name or func.__name__
 
-            # 如果没有提供schema，尝试从函数签名和docstring生成
+            # 如果没有提供完整schema，则生成
             if schema is None:
-                generated_schema = self._generate_schema_from_func(func)
+                # ✨ 关键修改：把param_descriptions传进去！
+                generated_schema = self._generate_schema_from_func(func, param_descriptions)
             else:
                 generated_schema = schema
 
@@ -52,8 +94,13 @@ class ToolRegistry:
 
         return decorator
 
-    def _generate_schema_from_func(self, func) -> Dict:
-        """从函数签名生成OpenAI工具schema（简化版）"""
+    def _generate_schema_from_func(self, func, param_descriptions: Dict = None) -> Dict:
+        """从函数签名生成OpenAI工具schema
+
+        Args:
+            func: 要生成schema的函数
+            param_descriptions: 参数描述的字典，如 {"code": "要执行的代码..."}
+        """
         sig = inspect.signature(func)
 
         properties = {}
@@ -71,9 +118,16 @@ class ToolRegistry:
             elif param.annotation == dict:
                 param_type = "object"
 
+            # ✨ 关键：使用传入的参数描述，如果没有就生成默认的
+            if param_descriptions and name in param_descriptions:
+                description = param_descriptions[name]
+            else:
+                # 尝试从函数文档解析（这里可以更智能）
+                description = f"Parameter: {name}"
+
             properties[name] = {
                 "type": param_type,
-                "description": f"Parameter: {name}"
+                "description": description
             }
 
             # 检查是否有默认值
